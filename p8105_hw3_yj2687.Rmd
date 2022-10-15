@@ -134,3 +134,29 @@ accel_df %>%
 * We can see that most of the activity count for every minute throughout the day is usually below 2500. The activity count at noon and evenings tends to peak compared to the other time of the day. 
 
 &nbsp;
+
+
+## Problem 3 (NY NOAA dataset)
+```{r,warning = FALSE,message=FALSE}
+# Tidy the dataset
+noaa_df = ny_noaa %>% 
+  janitor::clean_names() %>%
+  separate(date, into = c("year", "month", "day"), convert = TRUE) %>% 
+  arrange(year, month) %>%
+  mutate(prcp = prcp/10,
+         tmax = (as.double(tmax)/10),
+         tmin = (as.double(tmin)/10)) 
+
+# Count the most commonly values for snowfall
+snow_obs = noaa_df %>%
+  count(snow) %>% 
+  arrange(desc(n))
+```
+
+* This data collected weather data from all New York state weather stations between `r noaa_df %>% pull(year) %>% min()` and `r noaa_df %>% pull(year) %>% max()`.
+* There are `r nrow(noaa_df)` observations in the resulting tidied dataset, including `r ncol(noaa_df)` variables, namely `r names(noaa_df)`.
+* The `id` is a `r class(noaa_df$id)` variable, the `year`, `month`, `day` are `r class(noaa_df$year)` variables, and `prcp`, `snow`, `snwd`, `tmax`, `tmin` are `r class(noaa_df$prcp)` variables.
+* Interestingly, before tidy procedure, the variables `tmax` and `tmin` were defined as a character, the `snow` variable has a negative value of -13mm.
+* There exist `r sum(is.na(noaa_df$prcp))` missing values in `prcp`, `r sum(is.na(noaa_df$snow))` missing values in `snow`, `r sum(is.na(noaa_df$snwd))` missing values in `snwd`, `r sum(is.na(noaa_df$tmax))` missing values in `tmax` and `r sum(is.na(noaa_df$tmin))` missing values in `tmin`.
+* For snowfall, the most commonly observed value is `r snow_obs[1,1]` mm.
+
