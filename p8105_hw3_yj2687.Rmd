@@ -72,6 +72,7 @@ instacart %>%
   knitr::kable(digits = 2)
 ```
 
+&nbsp;
 
 ## Problem 2 (Accelerometer dataset)
 ```{r,warning = FALSE,message=FALSE}
@@ -97,11 +98,10 @@ accel_df = read.csv("./p8105_hw3_data/accel_data.csv") %>%
 * There are `r nrow(accel_df)` observations in the resulting tidy dataset, including `r ncol(accel_df)` variables, namely `r names(accel_df)`.
 
 
-&nbsp;
-
 
 ```{r}
 # Create a table showing total activity for each day by aggregating across minutes
+accel_df$day = factor(accel_df$day, levels = c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))
 
 accel_df %>% 
   group_by(day) %>% 
@@ -113,8 +113,6 @@ accel_df %>%
 
 * It is difficult to identify the apparent trends across days according to this table, while we can see the total activity on Saturdays is much lower than that on other days and Friday has the highest total activity.
 
-
-&nbsp;
 
 ```{r}
 # Make a single-panel plot showing the 24-hour activity time courses for each day and use color to indicate day of the week. 
@@ -135,4 +133,4 @@ accel_df %>%
 
 * We can see that most of the activity count for every minute throughout the day is usually below 2500. The activity count at noon and evenings tends to peak compared to the other time of the day. 
 
-
+&nbsp;
