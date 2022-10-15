@@ -73,6 +73,32 @@ instacart %>%
 ```
 
 
+## Problem 2 (Accelerometer dataset)
+```{r,warning = FALSE,message=FALSE}
+# Tidy the dataset
+accel_df = read.csv("./p8105_hw3_data/accel_data.csv") %>%
+  janitor::clean_names() %>%
+  pivot_longer(activity_1:activity_1440, names_to = "minutes_in_a_day", 
+               names_prefix = "activity_", values_to = "activity_count") %>% 
+  mutate(weekday_vs_weekend = case_when(
+    day == "Monday"  ~ "Weekday",
+    day == "Tuesday"  ~ "Weekday",
+    day == "Wednesday"  ~ "Weekday",
+    day == "Thursday"  ~ "Weekday",
+    day == "Friday"  ~ "Weekday",
+    day == "Sunday"  ~ "Weekend",
+    day == "Saturday"  ~ "Weekend"
+  )) %>% 
+  select(week, day_id, day, weekday_vs_weekend, everything()) %>% 
+  mutate_if(is.double, as.integer) %>%
+  mutate(minutes_in_a_day = as.integer(minutes_in_a_day))
+```
+
+* There are `r nrow(accel_df)` observations in the resulting tidy dataset, including `r ncol(accel_df)` variables, namely `r names(accel_df)`.
+
+
+&nbsp;
+
 
 
 
