@@ -184,3 +184,45 @@ jan_vs_july %>%
 ```
 
 
+
+```{r, warning = FALSE,message=FALSE}
+# Make a plot showing tmax vs tmin for the full dataset
+# Bin plot
+p1= noaa_df %>%
+  filter(!is.na(tmin), !is.na(tmax)) %>%
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_hex() +
+  labs(
+    title = "Max and min temperature comparison",
+    x = "Max temperature (C)",
+    y = "Min temperature (C)") +
+  theme(legend.title = element_text(size = 9), 
+        legend.text  = element_text(size = 5))
+
+# Make a plot showing the distribution of snowfall values greater than 0 and less than 100 separately by year
+p2 = noaa_df %>%
+  filter(snow > 0 & snow < 100) %>%
+  group_by(year) %>%
+  ggplot(aes(x = factor(year), y = snow)) +
+  geom_boxplot() +
+  labs(
+    title = "The distribution of snowfall",
+    x = "Year",
+    y = "Snowfall (mm)",
+    caption = "Data from the noaa package") +
+  theme(axis.text.x = element_text(size = 8, angle = 90, hjust = 0)) +
+  guides(color = guide_legend(override.aes = list(size = 5)))
+
+p2 = noaa_df %>% 
+  filter(snow > 0 & snow < 100) %>%
+  ggplot(aes(x = snow, y = as.factor(year))) +
+  geom_density_ridges(scale = 0.8) +
+  labs(
+    title = "The distribution of snowfall",
+    x = "Snowfall (mm)",
+    y = "Year",
+    caption = "Data from the noaa package") 
+
+# Two-panel layout
+p1+p2
+```
