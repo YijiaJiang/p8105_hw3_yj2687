@@ -74,6 +74,8 @@ instacart %>%
 
 &nbsp;
 
+
+
 ## Problem 2 (Accelerometer dataset)
 ```{r,warning = FALSE,message=FALSE}
 # Tidy the dataset
@@ -98,7 +100,6 @@ accel_df = read.csv("./p8105_hw3_data/accel_data.csv") %>%
 * There are `r nrow(accel_df)` observations in the resulting tidy dataset, including `r ncol(accel_df)` variables, namely `r names(accel_df)`.
 
 
-
 ```{r}
 # Create a table showing total activity for each day by aggregating across minutes
 accel_df$day = factor(accel_df$day, levels = c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))
@@ -109,7 +110,6 @@ accel_df %>%
   knitr::kable(align = "l", format = "pipe", col.names = c("Day","Total"))
 
 ```
-
 
 * It is difficult to identify the apparent trends across days according to this table, while we can see the total activity on Saturdays is much lower than that on other days and Friday has the highest total activity.
 
@@ -136,6 +136,7 @@ accel_df %>%
 &nbsp;
 
 
+
 ## Problem 3 (NY NOAA dataset)
 ```{r,warning = FALSE,message=FALSE}
 # Tidy the dataset
@@ -159,4 +160,27 @@ snow_obs = noaa_df %>%
 * Interestingly, before tidy procedure, the variables `tmax` and `tmin` were defined as a character, the `snow` variable has a negative value of -13mm.
 * There exist `r sum(is.na(noaa_df$prcp))` missing values in `prcp`, `r sum(is.na(noaa_df$snow))` missing values in `snow`, `r sum(is.na(noaa_df$snwd))` missing values in `snwd`, `r sum(is.na(noaa_df$tmax))` missing values in `tmax` and `r sum(is.na(noaa_df$tmin))` missing values in `tmin`.
 * For snowfall, the most commonly observed value is `r snow_obs[1,1]` mm.
+
+
+```{r, warning = FALSE,message=FALSE}
+# Make a two-panel plot showing the average max temperature in January and in July in each station across years.
+jan_vs_july = noaa_df %>%
+  filter(!is.na(tmax), month %in% c("1", "7")) %>%
+  mutate(month = recode(month, "01" = "January", "07" = "July")) %>%
+  group_by(id, year, month) %>%
+  summarise(average_tmax = mean(tmax))
+
+# Scatterplot
+jan_vs_july %>% 
+  ggplot( aes(x = year, y = average_tmax)) +
+  geom_point(alpha = .5) +
+  geom_smooth() +
+  facet_grid(. ~ month) +
+  labs(
+    title = "Average max temperature in January and in July in each station across years",
+    x = "Year",
+    y = "Average Maximum Temperature (C)",
+    caption = "Data from the noaa package") 
+```
+
 
