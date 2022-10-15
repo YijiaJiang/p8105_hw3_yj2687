@@ -100,6 +100,39 @@ accel_df = read.csv("./p8105_hw3_data/accel_data.csv") %>%
 &nbsp;
 
 
+```{r}
+# Create a table showing total activity for each day by aggregating across minutes
 
+accel_df %>% 
+  group_by(day) %>% 
+  summarize(total = sum(activity_count)) %>% 
+  knitr::kable(align = "l", format = "pipe", col.names = c("Day","Total"))
+
+```
+
+
+* It is difficult to identify the apparent trends across days according to this table, while we can see the total activity on Saturdays is much lower than that on other days and Friday has the highest total activity.
+
+
+&nbsp;
+
+```{r}
+# Make a single-panel plot showing the 24-hour activity time courses for each day and use color to indicate day of the week. 
+accel_df %>% 
+  group_by(day, minutes_in_a_day) %>%
+  rename(Day = day) %>%
+  ggplot(aes(minutes_in_a_day, activity_count, color = Day)) +
+  geom_point(alpha = 0.5) +
+  scale_x_continuous(
+    breaks = c(0, 180, 360, 540, 720, 900, 1080, 1260, 1440),
+    labels = c("12AM", "3AM", "6AM", "9AM", "12PM", "3PM", "6PM", "9PM", "11:59PM")) + 
+  labs(
+    title = "24-hour activity time courses for each day",
+    x = "Time",
+    y = "Activity Count") +
+  theme(legend.position = "right")
+```
+
+* We can see that most of the activity count for every minute throughout the day is usually below 2500. The activity count at noon and evenings tends to peak compared to the other time of the day. 
 
 
