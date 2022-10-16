@@ -35,17 +35,21 @@ scale_fill_discrete = scale_fill_viridis_d
 
 
 ## Problem 1 (Instacart dataset)
-```{r,warning = FALSE,message=FALSE}
+```{r, warning = FALSE, message=FALSE}
 data("instacart")
 
 instacart_df = 
   instacart %>% 
   as_tibble(instacart)
+```
 
+```{r, warning = FALSE, message=FALSE}
+# Create a table summarizing the number of items ordered from aisle.
 instacart_df %>% 
   count(aisle) %>% 
   arrange(desc(n))
 
+# Make a plot showing the number of items ordered in each aisle. 
 instacart_df %>% 
   count(aisle) %>% 
   filter(n > 10000) %>% 
@@ -55,6 +59,7 @@ instacart_df %>%
   labs(title = "Number of items ordered in each aisle") +
   theme(axis.text.x = element_text(angle = 60, hjust = 1))
 
+# Create a table shows the three most popular items in aisles `baking ingredients`, `dog food care`, and `packaged vegetables fruits`
 instacart %>% 
   filter(aisle %in% c("baking ingredients", "dog food care", "packaged vegetables fruits")) %>%
   group_by(aisle) %>% 
@@ -64,6 +69,7 @@ instacart %>%
   arrange(desc(n)) %>%
   knitr::kable()
 
+# Create a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week.
 instacart %>%
   filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) %>%
   group_by(product_name, order_dow) %>%
@@ -72,17 +78,24 @@ instacart %>%
   knitr::kable(digits = 2)
 ```
 
+* This resulting dataset contains `r nrow(instacart)` rows and `r ncol(instacart)` columns, with each row resprenting a single product from an instacart order. Variables include identifiers for user, order, and product; the order in which each product was added to the cart. There are several order-level variables, describing the day and time of the order, and number of days since prior order. Then there are several item-specific variables, describing the product name (e.g. Yogurt, Avocado), department (e.g. dairy and eggs, produce), and aisle (e.g. yogurt, fresh fruits), and whether the item has been ordered by this user in the past. In total, there are `r instacart %>% select(product_id) %>% distinct %>% count` products found in `r instacart %>% select(user_id, order_id) %>% distinct %>% count` orders from `r instacart %>% select(user_id) %>% distinct %>% count` distinct users.
+* In total, there are 134 aisles, with fresh vegetables and fresh fruits holding the most items ordered by far.
+* From the last table, we can know that Pink Lady Apples are generally purchased slightly earlier in the day than Coffee Ice Cream, with the exception of day 5.
+
+
 &nbsp;
 
 
 
 ## Problem 2 (Accelerometer dataset)
-```{r,warning = FALSE,message=FALSE}
+```{r, warning = FALSE, message=FALSE}
 # Tidy the dataset
 accel_df = read.csv("./p8105_hw3_data/accel_data.csv") %>%
   janitor::clean_names() %>%
   pivot_longer(activity_1:activity_1440, names_to = "minutes_in_a_day", 
                names_prefix = "activity_", values_to = "activity_count") %>% 
+  mutate(day = day %>% 
+           fct_relevel("Monday", "Tuesday", "Wednesday","Thursday","Friday", "Saturday","Sunday")) %>% 
   mutate(weekday_vs_weekend = case_when(
     day == "Monday"  ~ "Weekday",
     day == "Tuesday"  ~ "Weekday",
@@ -93,28 +106,25 @@ accel_df = read.csv("./p8105_hw3_data/accel_data.csv") %>%
     day == "Saturday"  ~ "Weekend"
   )) %>% 
   select(week, day_id, day, weekday_vs_weekend, everything()) %>% 
-  mutate_if(is.double, as.integer) %>%
   mutate(minutes_in_a_day = as.integer(minutes_in_a_day))
 ```
 
 * There are `r nrow(accel_df)` observations in the resulting tidy dataset, including `r ncol(accel_df)` variables, namely `r names(accel_df)`.
 
 
-```{r}
+```{r, warning = FALSE, message=FALSE}
 # Create a table showing total activity for each day by aggregating across minutes
-accel_df$day = factor(accel_df$day, levels = c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))
-
 accel_df %>% 
-  group_by(day) %>% 
+  group_by(week,day) %>% 
   summarize(total = sum(activity_count)) %>% 
-  knitr::kable(align = "l", format = "pipe", col.names = c("Day","Total"))
-
+  spread(key = day,total) %>% 
+  knitr::kable(align = "l", digits = 0)
 ```
 
-* It is difficult to identify the apparent trends across days according to this table, while we can see the total activity on Saturdays is much lower than that on other days and Friday has the relatively highest total activity.
+* It is difficult to identify the apparent trends across days according to this table, while we can see the total activity on week 4 and week 5 Saturdays is much lower than that on the other days.
 
 
-```{r}
+```{r, warning = FALSE, message=FALSE}
 # Make a single-panel plot showing the 24-hour activity time courses for each day and use color to indicate day of the week. 
 accel_df %>% 
   group_by(day, minutes_in_a_day) %>%
@@ -131,48 +141,56 @@ accel_df %>%
   theme(legend.position = "right")
 ```
 
-* We can see that most of the activity count for every minute throughout the day is usually below 2500. The activity count at noon (12PM) and evenings (9PM) tends to peak compared to the other time of the day, and the activity count tends to be very low between the period [12AM,6AM] across days as people normally sleep during this time. In terms of point dispersion, there are more activity counts per minute on Friday and Wednesday.
+* We can see that most of the activity count for every minute throughout the day is usually below 2500. The activity count at noon (12PM) and evenings (9PM) tends to reach the peak compared to the other time of the day, and the activity count tends to be very low between the period [12AM, 6AM] across days as people normally sleep during this time. In terms of point dispersion, there are more activity counts per minute on Friday and Wednesday.
 
 &nbsp;
 
 
 
 ## Problem 3 (NY NOAA dataset)
-```{r,warning = FALSE,message=FALSE}
+```{r, warning = FALSE, message=FALSE}
 # Tidy the dataset
 noaa_df = ny_noaa %>% 
   janitor::clean_names() %>%
-  separate(date, into = c("year", "month", "day"), convert = TRUE) %>% 
+  separate(date, into = c("year", "month", "day")) %>% 
   arrange(year, month) %>%
+  mutate(year = as.numeric(year),
+         month = month.name[as.numeric(month)],
+         day = as.numeric(day)) %>%
   mutate(prcp = prcp/10,
-         tmax = (as.double(tmax)/10),
-         tmin = (as.double(tmin)/10)) 
-
-# Count the most commonly values for snowfall
-snow_obs = noaa_df %>%
-  count(snow) %>% 
-  arrange(desc(n))
+         tmax = (as.numeric(tmax)/10),
+         tmin = (as.numeric(tmin)/10)) 
 ```
 
 * This data collected weather data from all New York state weather stations between `r noaa_df %>% pull(year) %>% min()` and `r noaa_df %>% pull(year) %>% max()`.
 * There are `r nrow(noaa_df)` observations in the resulting tidied dataset, including `r ncol(noaa_df)` variables, namely `r names(noaa_df)`.
+* The units for `prcp`, `snow`, `snwd` are unified as "Millimeter" (mm), and the unit for `tmax` and `tmin` are unified as "Celsius" (C).
 * The `id` is a `r class(noaa_df$id)` variable, the `year`, `month`, `day` are `r class(noaa_df$year)` variables, and `prcp`, `snow`, `snwd`, `tmax`, `tmin` are `r class(noaa_df$prcp)` variables.
-* Interestingly, before tidy procedure, the variables `tmax` and `tmin` were defined as a character, the `snow` variable has a negative value of -13mm.
-* There exist `r sum(is.na(noaa_df$prcp))` missing values in `prcp`, `r sum(is.na(noaa_df$snow))` missing values in `snow`, `r sum(is.na(noaa_df$snwd))` missing values in `snwd`, `r sum(is.na(noaa_df$tmax))` missing values in `tmax` and `r sum(is.na(noaa_df$tmin))` missing values in `tmin`.
-* For snowfall, the most commonly observed value is `r snow_obs[1,1]` mm.
+* Interestingly, before tidy procedure, the variables `tmax` and `tmin` were defined as a character, the `snow` variable has a negative value of -13 mm.
+* There exist `r sum(is.na(noaa_df$prcp))` missing values in `prcp`, `r sum(is.na(noaa_df$snow))` missing values in `snow`, `r sum(is.na(noaa_df$snwd))` missing values in `snwd`, `r sum(is.na(noaa_df$tmax))` missing values in `tmax` and `r sum(is.na(noaa_df$tmin))` missing values in `tmin`, accounting for `r sum(is.na(noaa_df$prcp)/nrow(noaa_df)) %>% scales::percent(0.01)`, `r sum(is.na(noaa_df$snow)/nrow(noaa_df)) %>% scales::percent(0.01)`, `r sum(is.na(noaa_df$snwd)/nrow(noaa_df)) %>% scales::percent(0.01)`, `r sum(is.na(noaa_df$tmax)/nrow(noaa_df)) %>% scales::percent(0.01)` and `r sum(is.na(noaa_df$tmin)/nrow(noaa_df)) %>% scales::percent(0.01)`, respectively. The issues for missing values cannot be ignored as some of the proportion is very large, nearly close to 50%. 
 
 
-```{r, warning = FALSE,message=FALSE}
+```{r, warning = FALSE, message=FALSE}
+# Count the most commonly values for snowfall
+snow_obs = noaa_df %>%
+  count(snow) %>% 
+  arrange(desc(n))
+snow_obs
+```
+
+* For snowfall, the most commonly observed value is `r snow_obs[1,1]` mm. This is because it seldom snow in New York owing to the geographical location.
+
+
+```{r, warning = FALSE, message=FALSE}
 # Make a two-panel plot showing the average max temperature in January and in July in each station across years.
 jan_vs_july = noaa_df %>%
-  filter(!is.na(tmax), month %in% c("1", "7")) %>%
-  mutate(month = recode(month, "01" = "January", "07" = "July")) %>%
+  filter(!is.na(tmax), month %in% c("January", "July")) %>%
   group_by(id, year, month) %>%
   summarise(average_tmax = mean(tmax))
 
 # Scatterplot
 jan_vs_july %>% 
-  ggplot( aes(x = year, y = average_tmax)) +
+  ggplot(aes(x = year, y = average_tmax)) +
   geom_point(alpha = .5) +
   geom_smooth() +
   facet_grid(. ~ month) +
@@ -183,7 +201,7 @@ jan_vs_july %>%
     caption = "Data from the noaa package") 
 ```
 
-* This two-panel scatter plot compares the average maximum temperature in January and in July in each station across years. We can observe that the average highest temperature in January is much lower than that in July across 30 years. This is because January is still winter and July is summer for New York. Additionally, the fluctuation of maximum temperature in January is larger than that in July, in a wavy pattern, first decreasing year by year and then beginning to rise year by year. Relatively, the maximum temperatures vary less in July. For both months, there are outliers present across the years, the average max temperature in 1988 July is abnormally low. 
+* This two-panel scatter plot compares the average maximum temperature in January and in July in each station across years. We can observe that the average highest temperature in January is much lower than that in July across 30 years. This is because January is winter and July is summer for New York. Additionally, the fluctuation of maximum temperature in January is larger than that in July, in a wavy pattern, first decreasing year by year and then beginning to rise year by year. Relatively, the maximum temperatures vary less in July. For both months, there are outliers present across the years, the average max temperature in 1988 July is abnormally low. 
 
 
 ```{r, warning = FALSE,message=FALSE}
@@ -201,23 +219,10 @@ p1= noaa_df %>%
         legend.text  = element_text(size = 5))
 
 # Make a plot showing the distribution of snowfall values greater than 0 and less than 100 separately by year
-p2 = noaa_df %>%
-  filter(snow > 0 & snow < 100) %>%
-  group_by(year) %>%
-  ggplot(aes(x = factor(year), y = snow)) +
-  geom_boxplot() +
-  labs(
-    title = "The distribution of snowfall",
-    x = "Year",
-    y = "Snowfall (mm)",
-    caption = "Data from the noaa package") +
-  theme(axis.text.x = element_text(size = 8, angle = 90, hjust = 0)) +
-  guides(color = guide_legend(override.aes = list(size = 5)))
-
 p2 = noaa_df %>% 
   filter(snow > 0 & snow < 100) %>%
   ggplot(aes(x = snow, y = as.factor(year))) +
-  geom_density_ridges(scale = 0.8) +
+  geom_density_ridges(scale = 0.7) +
   labs(
     title = "The distribution of snowfall",
     x = "Snowfall (mm)",
@@ -228,5 +233,5 @@ p2 = noaa_df %>%
 p1+p2
 ```
 
-* A two-panel plot is created by combining the hex plot and the density ridge plot, showing the comparison between the maximum temperature and the minimum temperature, and the distribution of snowfall values greater than 0 and less than 100 separately by year. From the hex plot, we observe that the temperature is around 0 to 25 degrees for most of the time. From the density ridge plot, we observe similar pattern of snowfall distribution across years by excluding the values less than 0 and more than 100, which is right skewed. Most of the snowfall has the value ranging from 10 mm to 30 mm, with some falling as much as 50 mm. 
+* A two-panel plot is created by combining the hex plot and the density ridge plot, showing the comparison between the maximum temperature and the minimum temperature, and the distribution of snowfall values greater than 0 and less than 100 separately by year. From the hex plot, we observe that there is a positive correlation between the maximum temperature and the minimum temperature and the temperature is around 0 to 25 degrees for most of the time. From the density ridge plot, we observe similar pattern of snowfall distribution across years by excluding the values less than 0 and more than 100. Most of the snowfall has the value ranging from 10 mm to 30 mm, with some falling as much as 50 mm. 
 
